@@ -118,58 +118,22 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   return newRequire;
 })({"app.js":[function(require,module,exports) {
-var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
-var content = document.createElement('div');
-var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
-var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
-var store = {
-  currentPage: 1
-};
-function getData(url) {
-  //비동기 처리 하지않고 동기처리하겠다.
-  ajax.open('GET', url, false);
-  ajax.send();
-  return JSON.parse(ajax.response);
+ajax.open('GET', 'https://api.hnpwa.com/v0/news/1.json', false);
+ajax.send();
+var newsFeed = JSON.parse(ajax.response);
+console.log(newsFeed);
+var ul = document.createElement('ul');
+for (var i = 0; i < 10; i++) {
+  var li = document.createElement('li');
+  var a = document.createElement('a');
+  a.href = '#';
+  a.innerHTML = "".concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")");
+  li.appendChild(a);
+  ul.appendChild(li);
 }
-function newsFeed() {
-  var newsFeed = getData(NEWS_URL);
-  var newsList = [];
-  var template = "\n\t<div class=\"bg-gray-600 min-h-screen\">\n\t<div class=\"bg-white text-xl\">\n\t  <div class=\"mx-auto px-4\">\n\t\t<div class=\"flex justify-between items-center py-6\">\n\t\t  <div class=\"flex justify-start\">\n\t\t\t<h1 class=\"font-extrabold\">Hacker News</h1>\n\t\t  </div>\n\t\t  <div class=\"items-center justify-end\">\n\t\t\t<a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n\t\t\t  Previous\n\t\t\t</a>\n\t\t\t<a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n\t\t\t  Next\n\t\t\t</a>\n\t\t  </div>\n\t\t</div> \n\t  </div>\n\t</div>\n\t<div class=\"p-4 text-2xl text-gray-700\">\n\t  {{__news_feed__}}        \n\t</div>\n  </div>\n\t";
-  for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
-    newsList.push("\n\t<div class=\"p-6 ".concat(newsFeed[i].read ? 'bg-red-500' : 'bg-white', " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n\t<div class=\"flex\">\n\t  <div class=\"flex-auto\">\n\t\t<a href=\"#/show/").concat(newsFeed[i].id, "\">").concat(newsFeed[i].title, "</a>  \n\t  </div>\n\t  <div class=\"text-center text-sm\">\n\t\t<div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">").concat(newsFeed[i].comments_count, "</div>\n\t  </div>\n\t</div>\n\t<div class=\"flex mt-3\">\n\t  <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n\t\t<div><i class=\"fas fa-user mr-1\"></i>").concat(newsFeed[i].user, "</div>\n\t\t<div><i class=\"fas fa-heart mr-1\"></i>").concat(newsFeed[i].points, "</div>\n\t\t<div><i class=\"far fa-clock mr-1\"></i>").concat(newsFeed[i].time_ago, "</div>\n\t  </div>  \n\t</div>\n  </div>    \n\t"));
-  }
-  template = template.replace('{{__news_feed__}}', newsList.join(''));
-  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
-  template = template.replace('{{__next_page__}}', store.currentPage + 1);
-  container.innerHTML = template;
-}
-function newsDetail() {
-  var id = location.hash.substring(7);
-  var newsContent = getData(CONTENT_URL.replace('@id', id));
-  var template = "\n\t<div class=\"bg-gray-600 min-h-screen pb-8\">\n\t<div class=\"bg-white text-xl\">\n\t\t<div class=\"mx-auto px-4\">\n\t\t\t<div class=\"flex justify-between items-center py-6\">\n\t\t\t<div class=\"flex justify-start\">\n\t\t\t\t<h1 class=\"font-extrabold\">Hacker News</h1>\n\t\t\t</div>\n\t\t\t<div class=\"items-center justify-end\">\n\t\t\t\t<a href=\"#/page/".concat(store.currentPage, "\" class=\"text-gray-500\">\n\t\t\t\t<i class=\"fa fa-times\"></i>\n\t\t\t\t</a>\n\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t</div>\n\n\t\t<div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n\t\t<h2>").concat(newsContent.title, "</h2>\n\t\t<div class=\"text-gray-400 h-20\">\n\t\t\t").concat(newsContent.content, "\n\t\t</div>\n\n\t\t{{__comments__}}\n\n\t\t</div>\n\t</div>\n\t");
-  function makeComment(comments) {
-    var commentString = [];
-    for (var i = 0; i < comments.length; i++) {
-      commentString.push("\n\t\t\t<div style=\"padding-left: ".concat(called * 40, "px;\" class=\"mt-4\">\n\t\t\t\t<div class=\"text-gray-400\">\n\t\t\t\t<i class=\"fa fa-sort-up mr-2\"></i>\n\t\t\t\t<strong>").concat(comments[i].user, "</strong> ").concat(comments[i].time_ago, "\n\t\t\t\t</div>\n\t\t\t\t<p class=\"text-gray-700\">").concat(comments[i].content, "</p>\n\t\t\t</div>      \n\n\t\t\t"));
-    }
-  }
-  container.innerHTML = template.replace('{{__comments__}}', makeComment());
-}
-function router() {
-  var routePath = location.hash;
-  if (routePath === '') {
-    newsFeed();
-  } else if (routePath.indexOf('#/page/') >= 0) {
-    store.currentPage = Number(routePath.substring(7));
-    newsFeed();
-  } else {
-    newsDetail();
-  }
-}
-window.addEventListener('hashchange', router);
-router();
-},{}],"C:/Users/USER/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+document.getElementById('root').appendChild(ul);
+},{}],"C:/Users/home/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -194,7 +158,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51452" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "10484" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
@@ -338,5 +302,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["C:/Users/USER/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
+},{}]},{},["C:/Users/home/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
 //# sourceMappingURL=/app.c328ef1a.js.map
